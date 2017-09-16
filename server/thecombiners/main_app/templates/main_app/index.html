@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <style type="text/css">
+        #field_image_div{
+           background-image: url('');
+           background-size: auto;
+           background-position: center;
+           background-repeat: no-repeat;
+           background-color: #000000;
+           height: 600px;
+           width: 800px;
+           border: 1px solid #bbb;
+        }
+    </style>
+</head>
+<body onload="clear_canvas()">
+<input type='file' id='image_upload_input' name="field_image" /><br/><br/>
+
+<div style="float:left">
+    <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair" data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)" oncontextmenu="return false;">
+        Your browser does not support the HTML5 canvas tag.
+    </canvas>
+</div>
+<div style="float:left; margin-left:20px;">
+    <div>
+        <button onclick="undo()">Undo</button>
+        <button onclick="clear_canvas()">Clear</button>
+        <p>Press <strong>Left Click</strong> to draw a point.</p>
+        <p><strong>CTRL+Click</strong> or <strong>Right Click</strong> to close the polygon.</p>
+    </div>
+    <div>
+        <p><strong>Coordinates:</strong></p>
+        <form id="coordinates_form">
+        {% csrf_token %}
+            <textarea id="coordinates" name="coordinates" style="width:300px; height:200px;"></textarea>
+            <button type="submit">Run car!</button>
+        </form>
+    </div>
+    <div>
+        <p>Go to <a href="http://www.matteomattei.com/projects/jpolygon">project website</a> - <a href="https://github.com/matteomattei/jPolygon">source code</a></p>
+    </div>
+</div>
+
+<script type="text/javascript" src="{% static 'main_app/js/jPolygon.js' %}"></script>
+<script type="text/javascript">
+document.getElementById('image_upload_input').addEventListener('change', readURL, true);
+var img_url = "url('')"
+function readURL(){
+   var file = document.getElementById("image_upload_input").files[0];
+   var reader = new FileReader();
+   reader.onloadend = function(){
+      img_url = reader.result;
+      start(true);
+   }
+   if(file){
+      reader.readAsDataURL(file);
+    }else{
+    }
+};
+
+$('#coordinates_form').submit(function(e) {
+    e.preventDefault();
+    $.post('{% url "run_car" %}', $('#coordinates_form').serialize(), function (data) {
+        setTimeout(getCarStatus, 500);
+    }).fail(function () {
+        alert('fail');
+    });
+    return false;
+});
+
+function getCarStatus() {
+    $.get('{% url "get_car_status" %}', function (data) {
+        draw_car(data.x, data.y, data.quality);
+        setTimeout(getCarStatus, 500);
+    }).fail(function () {
+        alert('fail');
+    });
+};
+
+// taken from http://jsfiddle.net/xgJ2e/2/
+var hsv2rgb = function(h, s, v) {
+  // adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
+  var rgb, i, data = [];
+  if (s === 0) {
+    rgb = [v,v,v];
+  } else {
+    h = h / 60;
+    i = Math.floor(h);
+    data = [v*(1-s), v*(1-s*(h-i)), v*(1-s*(1-(h-i)))];
+    switch(i) {
+      case 0:
+        rgb = [v, data[2], data[0]];
+        break;
+      case 1:
+        rgb = [data[1], v, data[0]];
+        break;
+      case 2:
+        rgb = [data[0], v, data[2]];
+        break;
+      case 3:
+        rgb = [data[0], data[1], v];
+        break;
+      case 4:
+        rgb = [data[2], data[0], v];
+        break;
+      default:
+        rgb = [v, data[0], data[1]];
+        break;
+    }
+  }
+  return '#' + rgb.map(function(x){
+    return ("0" + Math.round(x*255).toString(16)).slice(-2);
+  }).join('');
+};
+
+function draw_car(x, y, quality){
+    ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, 2 * Math.PI);
+    val = quality;
+    var h= Math.floor((1 - val) * 120);
+    var s = Math.abs(val - 0.5) / 0.5;
+    var v = 1;
+    ctx.fillStyle=hsv2rgb(h, s, 1);
+    ctx.fill();
+    requestAnimationFrame(draw);
+};
+
+</script>
+
+</body>
+</html>
