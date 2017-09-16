@@ -1,13 +1,32 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
 
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-    <style type="text/css">
-        #field_image_div{
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Bare - Start Bootstrap Template</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/main_app/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <style>
+      body {
+        padding-top: 54px;
+      }
+      @media (min-width: 992px) {
+        body {
+          padding-top: 56px;
+        }
+      }
+
+
+      #field_image_div{
            background-image: url('');
            background-size: auto;
            background-position: center;
@@ -17,37 +36,97 @@
            width: 800px;
            border: 1px solid #bbb;
         }
-    </style>
-</head>
-<body onload="clear_canvas()">
-<input type='file' id='image_upload_input' name="field_image" /><br/><br/>
 
-<div style="float:left">
-    <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair" data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)" oncontextmenu="return false;">
-        Your browser does not support the HTML5 canvas tag.
-    </canvas>
-</div>
-<div style="float:left; margin-left:20px;">
-    <div>
-        <button onclick="undo()">Undo</button>
-        <button onclick="clear_canvas()">Clear</button>
-        <p>Press <strong>Left Click</strong> to draw a point.</p>
-        <p><strong>CTRL+Click</strong> or <strong>Right Click</strong> to close the polygon.</p>
+
+    </style>
+
+</head>
+
+<body onload="clear_canvas()">
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">The Combiners</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+                aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
-    <div>
-        <p><strong>Coordinates:</strong></p>
+</nav>
+
+
+<div class="jumbotron">
+    <h1 class="display-3">Upload a photo of the map</h1>
+    <p class="lead">Please upload a photo of the map, in order to interactively select the area of interest</p>
+    <hr class="my-4">
+</div>
+
+<!-- Page Content -->
+<div class="container">
+
+    <div class="row">
+        <label class="btn btn-block btn-primary">
+            Browse&hellip; <input type="file" style="display: none;" id='image_upload_input' name="field_image"/>
+        </label>
+    </div>
+
+
+    <div class="row">
+        <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair"
+                data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)"
+                oncontextmenu="return false;">
+            Your browser does not support the HTML5 canvas tag.
+        </canvas>
+    </div>
+
+
+    <div class="row">
+        <div class="col">
+            <button onclick="undo()" class="btn btn-block btn-primary">Undo</button>
+        </div>
+
+        <div class="col">
+            <button onclick="clear_canvas()" class="btn btn-block btn-danger">Clear</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <p class="text-primary lead">Press <strong>Left Click</strong> to draw a point. CTRL+Click or Right Click to
+                close the
+                polygon.</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="coordinates">Coordinates</label>
         <form id="coordinates_form">
-        {% csrf_token %}
-            <textarea id="coordinates" name="coordinates" style="width:300px; height:200px;"></textarea>
-            <button type="submit">Run car!</button>
+            {% csrf_token %}
+            <textarea class="form-control" id="coordinates" name="coordinates"></textarea>
+            <button class="btn btn-success" type="submit">Run</button>
         </form>
     </div>
-    <div>
-        <p>Go to <a href="http://www.matteomattei.com/projects/jpolygon">project website</a> - <a href="https://github.com/matteomattei/jPolygon">source code</a></p>
-    </div>
+
 </div>
 
+
+<!-- Bootstrap core JavaScript -->
+<script src="/static/main_app/vendor/jquery/jquery.min.js"></script>
+<script src="/static/main_app/vendor/popper/popper.min.js"></script>
+<script src="/static/main_app/vendor/bootstrap/js/bootstrap.min.js"></script>
+
 <script type="text/javascript" src="{% static 'main_app/js/jPolygon.js' %}"></script>
+
 <script type="text/javascript">
 document.getElementById('image_upload_input').addEventListener('change', readURL, true);
 var img_url = "url('')"
@@ -63,7 +142,6 @@ function readURL(){
     }else{
     }
 };
-
 $('#coordinates_form').submit(function(e) {
     e.preventDefault();
     $.post('{% url "run_car" %}', $('#coordinates_form').serialize(), function (data) {
@@ -73,7 +151,6 @@ $('#coordinates_form').submit(function(e) {
     });
     return false;
 });
-
 function getCarStatus() {
     $.get('{% url "get_car_status" %}', function (data) {
         draw_car(data.x, data.y, data.quality);
@@ -82,7 +159,6 @@ function getCarStatus() {
         alert('fail');
     });
 };
-
 // taken from http://jsfiddle.net/xgJ2e/2/
 var hsv2rgb = function(h, s, v) {
   // adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
@@ -118,7 +194,6 @@ var hsv2rgb = function(h, s, v) {
     return ("0" + Math.round(x*255).toString(16)).slice(-2);
   }).join('');
 };
-
 function draw_car(x, y, quality){
     ctx = canvas.getContext("2d");
     ctx.beginPath();
@@ -132,7 +207,54 @@ function draw_car(x, y, quality){
     requestAnimationFrame(draw);
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 </body>
+
 </html>
