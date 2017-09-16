@@ -16,4 +16,12 @@ def feature_image(path):
     image = cv2.dilate(image, None, iterations=10)
     image = cv2.erode(image, None, iterations=10)   
     
-    return image
+    return image/255
+
+def contamination(path): 
+    image = feature_image(path)
+    print(image)
+    x, y = image.shape
+    no_contamination = sum(sum(image))/(x*y)
+        
+    return 100*(1-no_contamination)
