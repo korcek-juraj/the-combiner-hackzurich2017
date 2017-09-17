@@ -3,6 +3,7 @@ import random
 
 from django.http.response import HttpResponse
 from django.shortcuts import render
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 
 def index(request):
@@ -24,6 +25,6 @@ def get_car_status(request):
         x = random.randint(1, 500)
         y = random.randint(1, 500)
         quality = random.uniform(0, 1)
-        data = {'x': x, 'y': y, 'quality': quality, }
+        data = {'x': x, 'y': y, 'quality': quality, 'img_url': static('main_app/img/image.jpg'), 'data': [('quality', quality), ('lol1', 1), ('lol2', 2)]}
     mimeype = 'application/json'
     return HttpResponse(json.dumps(data), mimeype)

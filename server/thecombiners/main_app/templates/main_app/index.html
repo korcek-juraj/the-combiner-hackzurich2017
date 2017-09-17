@@ -82,11 +82,17 @@
 
 
     <div class="row">
-        <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair"
-                data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)"
-                oncontextmenu="return false;">
-            Your browser does not support the HTML5 canvas tag.
-        </canvas>
+        <div class="col-md-9">
+            <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair"
+                    data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)"
+                    oncontextmenu="return false;">
+                Your browser does not support the HTML5 canvas tag.
+            </canvas>
+        </div>
+        <div class="col-md-3">
+            <img id="seed_pic" src="" class="img-fluid">
+            <div id="sample_data"></div>
+        </div>
     </div>
 
 
@@ -145,7 +151,7 @@ function readURL(){
 $('#coordinates_form').submit(function(e) {
     e.preventDefault();
     $.post('{% url "run_car" %}', $('#coordinates_form').serialize(), function (data) {
-        setTimeout(getCarStatus, 500);
+        setTimeout(getCarStatus, 2000);
     }).fail(function () {
         alert('fail');
     });
@@ -153,8 +159,8 @@ $('#coordinates_form').submit(function(e) {
 });
 function getCarStatus() {
     $.get('{% url "get_car_status" %}', function (data) {
-        draw_car(data.x, data.y, data.quality);
-        setTimeout(getCarStatus, 500);
+        draw_car(data);
+        setTimeout(getCarStatus, 2000);
     }).fail(function () {
         alert('fail');
     });
@@ -194,64 +200,58 @@ var hsv2rgb = function(h, s, v) {
     return ("0" + Math.round(x*255).toString(16)).slice(-2);
   }).join('');
 };
-function draw_car(x, y, quality){
+var shapes = [];
+function draw_car(data){
     ctx = canvas.getContext("2d");
     ctx.beginPath();
-    ctx.arc(x, y, 20, 0, 2 * Math.PI);
-    val = quality;
-    var h= Math.floor((1 - val) * 120);
+    ctx.arc(data.x, data.y, 20, 0, 2 * Math.PI);
+    val = data.quality;
+    var h = Math.floor((1 - val) * 120);
     var s = Math.abs(val - 0.5) / 0.5;
     var v = 1;
-    ctx.fillStyle=hsv2rgb(h, s, 1);
+    ctx.fillStyle = hsv2rgb(h, s, 1);
     ctx.fill();
-    requestAnimationFrame(draw);
+    shapes.push(data);
+    <!--requestAnimationFrame(draw);-->
 };
 
+function handleMouseDown(e){
+  e.preventDefault();
+  var offsetX = $(canvas).offset().left;
+  var offsetY = $(canvas).offset().top;
 
+  // get the mouse position
+  var mouseX = parseInt(e.clientX - offsetX);
+  var mouseY = parseInt(e.clientY - offsetY + $(window).scrollTop());
 
+  var hit = false;
+  // iterate each shape in the shapes array
+  for(var i=0; i < shapes.length; i++){
+      var shape = shapes[i];
+      // define the current shape
+      ctx.beginPath();
+      ctx.arc(shape.x, shape.y, 20, 0, 2 * Math.PI);
+      // test if the mouse is in the current shape
+      if(ctx.isPointInPath(mouseX, mouseY)){
+          // if inside, display the shape's message
+          $('#seed_pic').attr('src', shape.img_url);
+          var arrayLength = shape.data.length;
+          var res = '';
+          for (var i = 0; i < arrayLength; i++) {
+            res += shape.data[i][0] + ': ' + shape.data[i][1] + '<br>';
+          };
+          $('#sample_data').html(res);
+          hit = true;
+      }
+  };
+  if (!hit) {
+    $('#seed_pic').attr('src', '');
+    $('#sample_data').html('');
+  };
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// listen for mousedown events
+<!--$("#jPolygon").mousedown(function(e){handleMouseDown(e);});-->
 
 </script>
 

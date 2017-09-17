@@ -113,7 +113,8 @@ function check_intersect(x,y){
 
 function point_it(event) {
     if(complete){
-        alert('Polygon already created');
+//        alert('Polygon already created');
+        handleMouseDown(event);
         return false;
     }
     var rect, x, y;
