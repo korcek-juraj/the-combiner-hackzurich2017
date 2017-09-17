@@ -1,0 +1,260 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Bare - Start Bootstrap Template</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/main_app/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <style>
+      body {
+        padding-top: 54px;
+      }
+      @media (min-width: 992px) {
+        body {
+          padding-top: 56px;
+        }
+      }
+
+
+      #field_image_div{
+           background-image: url('');
+           background-size: auto;
+           background-position: center;
+           background-repeat: no-repeat;
+           background-color: #000000;
+           height: 600px;
+           width: 800px;
+           border: 1px solid #bbb;
+        }
+
+
+    </style>
+
+</head>
+
+<body onload="clear_canvas()">
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">The Combiners</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+                aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<div class="jumbotron">
+    <h1 class="display-3">Upload a photo of the map</h1>
+    <p class="lead">Please upload a photo of the map, in order to interactively select the area of interest</p>
+    <hr class="my-4">
+</div>
+
+<!-- Page Content -->
+<div class="container">
+
+    <div class="row">
+        <label class="btn btn-block btn-primary">
+            Browse&hellip; <input type="file" style="display: none;" id='image_upload_input' name="field_image"/>
+        </label>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-9">
+            <canvas id="jPolygon" width="800" height="600" style="cursor:crosshair"
+                    data-imgsrc="{% static 'main_app/img/image.jpg' %}" onmousedown="point_it(event)"
+                    oncontextmenu="return false;">
+                Your browser does not support the HTML5 canvas tag.
+            </canvas>
+        </div>
+        <div class="col-md-3">
+            <img id="seed_pic" src="" class="img-fluid">
+            <div id="sample_data"></div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col">
+            <button onclick="undo()" class="btn btn-block btn-primary">Undo</button>
+        </div>
+
+        <div class="col">
+            <button onclick="clear_canvas()" class="btn btn-block btn-danger">Clear</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <p class="text-primary lead">Press <strong>Left Click</strong> to draw a point. CTRL+Click or Right Click to
+                close the
+                polygon.</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="coordinates">Coordinates</label>
+        <form id="coordinates_form">
+            {% csrf_token %}
+            <textarea class="form-control" id="coordinates" name="coordinates"></textarea>
+            <button class="btn btn-success" type="submit">Run</button>
+        </form>
+    </div>
+
+</div>
+
+
+<!-- Bootstrap core JavaScript -->
+<script src="/static/main_app/vendor/jquery/jquery.min.js"></script>
+<script src="/static/main_app/vendor/popper/popper.min.js"></script>
+<script src="/static/main_app/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="{% static 'main_app/js/jPolygon.js' %}"></script>
+
+<script type="text/javascript">
+document.getElementById('image_upload_input').addEventListener('change', readURL, true);
+var img_url = "url('')"
+function readURL(){
+   var file = document.getElementById("image_upload_input").files[0];
+   var reader = new FileReader();
+   reader.onloadend = function(){
+      img_url = reader.result;
+      start(true);
+   }
+   if(file){
+      reader.readAsDataURL(file);
+    }else{
+    }
+};
+$('#coordinates_form').submit(function(e) {
+    e.preventDefault();
+    $.post('{% url "run_car" %}', $('#coordinates_form').serialize(), function (data) {
+        setTimeout(getCarStatus, 2000);
+    }).fail(function () {
+        alert('fail');
+    });
+    return false;
+});
+function getCarStatus() {
+    $.get('{% url "get_car_status" %}', function (data) {
+        draw_car(data);
+        setTimeout(getCarStatus, 2000);
+    }).fail(function () {
+        alert('fail');
+    });
+};
+// taken from http://jsfiddle.net/xgJ2e/2/
+var hsv2rgb = function(h, s, v) {
+  // adapted from http://schinckel.net/2012/01/10/hsv-to-rgb-in-javascript/
+  var rgb, i, data = [];
+  if (s === 0) {
+    rgb = [v,v,v];
+  } else {
+    h = h / 60;
+    i = Math.floor(h);
+    data = [v*(1-s), v*(1-s*(h-i)), v*(1-s*(1-(h-i)))];
+    switch(i) {
+      case 0:
+        rgb = [v, data[2], data[0]];
+        break;
+      case 1:
+        rgb = [data[1], v, data[0]];
+        break;
+      case 2:
+        rgb = [data[0], v, data[2]];
+        break;
+      case 3:
+        rgb = [data[0], data[1], v];
+        break;
+      case 4:
+        rgb = [data[2], data[0], v];
+        break;
+      default:
+        rgb = [v, data[0], data[1]];
+        break;
+    }
+  }
+  return '#' + rgb.map(function(x){
+    return ("0" + Math.round(x*255).toString(16)).slice(-2);
+  }).join('');
+};
+var shapes = [];
+function draw_car(data){
+    ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.arc(data.x, data.y, 20, 0, 2 * Math.PI);
+    val = data.quality;
+    var h = Math.floor((1 - val) * 120);
+    var s = Math.abs(val - 0.5) / 0.5;
+    var v = 1;
+    ctx.fillStyle = hsv2rgb(h, s, 1);
+    ctx.fill();
+    shapes.push(data);
+    <!--requestAnimationFrame(draw);-->
+};
+
+function handleMouseDown(e){
+  e.preventDefault();
+  var offsetX = $(canvas).offset().left;
+  var offsetY = $(canvas).offset().top;
+
+  // get the mouse position
+  var mouseX = parseInt(e.clientX - offsetX);
+  var mouseY = parseInt(e.clientY - offsetY + $(window).scrollTop());
+
+  var hit = false;
+  // iterate each shape in the shapes array
+  for(var i=0; i < shapes.length; i++){
+      var shape = shapes[i];
+      // define the current shape
+      ctx.beginPath();
+      ctx.arc(shape.x, shape.y, 20, 0, 2 * Math.PI);
+      // test if the mouse is in the current shape
+      if(ctx.isPointInPath(mouseX, mouseY)){
+          // if inside, display the shape's message
+          $('#seed_pic').attr('src', shape.img_url);
+          var arrayLength = shape.data.length;
+          var res = '';
+          for (var i = 0; i < arrayLength; i++) {
+            res += shape.data[i][0] + ': ' + shape.data[i][1] + '<br>';
+          };
+          $('#sample_data').html(res);
+          hit = true;
+      }
+  };
+  if (!hit) {
+    $('#seed_pic').attr('src', '');
+    $('#sample_data').html('');
+  };
+}
+
+// listen for mousedown events
+<!--$("#jPolygon").mousedown(function(e){handleMouseDown(e);});-->
+
+</script>
+
+</body>
+
+</html>
