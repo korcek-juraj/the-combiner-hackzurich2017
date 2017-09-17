@@ -7,6 +7,8 @@ from django.shortcuts import render
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+from main_app.contamination_detection import *
+import random
 
 
 def index(request):
@@ -77,7 +79,13 @@ def get_car_status(request):
                     data = 'done'
         request.session['current_location'] = (x, y, dir)
         if not data == 'done':
-            quality = random.uniform(0, 1)
-            data = {'x': x, 'y': y, 'quality': quality, 'img_url': static('main_app/img/image.jpg'), 'data': [('quality', quality), ('lol1', 1), ('lol2', 2)]}
+            origin = '/home/natalija/Documents/HackZurich/server/thecombiners/main_app/static/main_app/img/'
+            image_list = ['contamination1.jpg', 'contamination3.jpg', 'no_contamination1.jpg','no_contamination2.jpg','no_contamination3.jpg']
+            image_path = image_list[random.randint(0,4)]
+            
+            quality = (contamination(origin + image_path))/100
+            grains = predict_grains(origin + image_path).split('\n')
+
+            data = {'x': x, 'y': y, 'quality': quality, 'img_url': static('main_app/img/' + image_path), 'data': [('quality', quality), ('grains', grains)]}
     mimeype = 'application/json'
     return HttpResponse(json.dumps(data), mimeype)

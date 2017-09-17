@@ -78,3 +78,37 @@ def vector_feature_generation(path):
     features = pca.fit_transform(features)
         
     return features
+
+def predict_grains(path): 
+    loaded_model = pickle.load(open("/home/natalija/Documents/HackZurich/server/thecombiners/main_app/static/main_app/img/model.pkl", 'rb'))
+    features = vector_feature_generation(path)
+    
+    maping = {}
+    maping[1] = "beans"
+    maping[2] = "dried_bean"
+    maping[3] = "fines"
+    maping[4] = "grains"
+    maping[5] = "lentils"
+    maping[6] = "pumpkin"
+    maping[7] = "stones"
+    maping[8] = "straw"
+    maping[9] = "quinoa"
+
+    count = {}
+    count[1] = 0
+    count[2] = 0
+    count[3] = 0
+    count[4] = 0
+    count[5] = 0
+    count[6] = 0
+    count[7] = 0
+    count[8] = 0
+    count[9] = 0
+
+    for i in result:
+        count[i] +=1
+    result = ""
+    for i in range(1,10): 
+        if count[i] != 0 and i!=4: 
+            result+=("{}% of the contaminated grains are {}/n".format(100/count[i], maping[i]))
+    return result
