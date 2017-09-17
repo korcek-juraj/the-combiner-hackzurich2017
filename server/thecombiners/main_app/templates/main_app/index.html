@@ -160,8 +160,10 @@ $('#coordinates_form').submit(function(e) {
 });
 function getCarStatus() {
     $.get('{% url "get_car_status" %}', function (data) {
-        draw_car(data);
-        setTimeout(getCarStatus, time_out);
+        if (data != 'done') {
+            draw_car(data);
+            setTimeout(getCarStatus, time_out);
+        };
     }).fail(function () {
         alert('fail');
     });
